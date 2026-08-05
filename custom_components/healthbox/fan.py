@@ -151,17 +151,17 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
         await self._async_apply(enable=False)
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Adjust the level of an already-active boost.
+        """Start (or adjust) a boost at this level.
 
-        Matches standard HA fan behavior: adjusting the slider while off
-        doesn't implicitly turn boost on - use the toggle (which applies
-        the configured default) or turn_on with an explicit percentage.
+        Deliberately *not* the "only adjusts while already on" behavior
+        some fan integrations use - for a boost control, picking a level
+        is itself the "start it" action, on or off, matching what actually
+        happened when this was tried live: it silently did nothing while
+        off, which just reads as a broken dropdown.
         """
         self._check_rooms_exist()
         if percentage == 0:
             await self._async_apply(enable=False)
-            return
-        if not self.is_on:
             return
         level = round(percentage_to_ranged_value(BOOST_LEVEL_RANGE, percentage))
         await self._async_apply(
@@ -169,13 +169,12 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Adjust the duration of an already-active boost.
+        """Start (or adjust) a boost at this duration, on or off.
 
-        Same "only while on" behavior as async_set_percentage.
+        See async_set_percentage's docstring for why this doesn't require
+        the fan to already be on.
         """
         self._check_rooms_exist()
-        if not self.is_on:
-            return
         await self._async_apply(
             enable=True, level=self._current_level(), duration_preset=preset_mode
         )
