@@ -7,12 +7,25 @@
                     "host": "IP-adres",
                     "api_key": "API-sleutel"
                 }
+            },
+            "reconfigure": {
+                "description": "Werk de verbindingsgegevens voor deze Healthbox bij, bijvoorbeeld als het IP-adres is gewijzigd.",
+                "data": {
+                    "host": "IP-adres",
+                    "api_key": "API-sleutel"
+                }
             }
         },
         "error": {
             "auth": "De API-sleutel is onjuist.",
             "connection": "Kan geen verbinding maken met de Healthbox 3-eenheid.",
             "unknown": "Er is een onbekende fout opgetreden."
+        },
+        "abort": {
+            "reconfigure_successful": "Herconfiguratie is gelukt.",
+            "cannot_connect": "Kon geen verbinding maken met de gevonden Healthbox.",
+            "no_matching_entry": "Geen geconfigureerde Healthbox komt overeen met dit apparaat; genegeerd.",
+            "wrong_device": "Dit adres hoort bij een andere Healthbox dan degene die wordt geherconfigureerd."
         }
     },
     "options": {
@@ -22,6 +35,9 @@
                     "api_key": "API-sleutel"
                 }
             }
+        },
+        "error": {
+            "invalid_auth": "De API-sleutel is onjuist."
         }
     }
 }

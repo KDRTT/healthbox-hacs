@@ -12,6 +12,7 @@ from pyhealthbox3.healthbox3 import Healthbox3
 from .const import (
     ALL_SERVICES,
     DOMAIN,
+    LOGGER,
     SERVICE_CHANGE_ROOM_PROFILE,
     SERVICE_CHANGE_ROOM_PROFILE_SCHEMA,
     SERVICE_START_ROOM_BOOST,
@@ -22,6 +23,33 @@ from .const import (
 )
 
 from .coordinator import HealthboxDataUpdateCoordinator
+from .discovery import async_fetch_serial
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate a config entry whose unique_id predates serial-based identity.
+
+    Entries created before automatic DHCP relocation was added have
+    ``unique_id = f"{DOMAIN}_{host}"`` (tied to the IP, the very thing that
+    changes). Rewriting it to the device's serial lets DHCP discovery
+    recognize an already-configured device again after it moves.
+    """
+    host_based_prefix = f"{DOMAIN}_"
+    if entry.unique_id and not entry.unique_id.startswith(host_based_prefix):
+        return True
+
+    serial = await async_fetch_serial(entry.data[CONF_HOST], async_get_clientsession(hass))
+    if serial is None:
+        LOGGER.warning(
+            "Could not reach %s to migrate its unique_id to a serial number; "
+            "automatic relocation on IP change won't work for this entry until "
+            "it succeeds on a later reload.",
+            entry.data[CONF_HOST],
+        )
+        return True
+
+    hass.config_entries.async_update_entry(entry, unique_id=serial)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
