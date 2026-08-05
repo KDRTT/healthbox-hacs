@@ -6,6 +6,11 @@
   ],
   "config_flow": true,
   "dependencies": [],
+  "dhcp": [
+    {
+      "hostname": "healthbox3*"
+    }
+  ],
   "documentation": "https://github.com/rmassch/healthbox-hacs",
   "homekit": {},
   "iot_class": "local_polling",

@@ -7,12 +7,25 @@
                     "host": "IP Address",
                     "api_key": "API Key"
                 }
+            },
+            "reconfigure": {
+                "description": "Update the connection details for this Healthbox, e.g. if its IP address changed.",
+                "data": {
+                    "host": "IP Address",
+                    "api_key": "API Key"
+                }
             }
         },
         "error": {
             "auth": "API Key is wrong.",
             "connection": "Unable to connect to the Healthbox 3 Unit.",
             "unknown": "Unknown error occurred."
+        },
+        "abort": {
+            "reconfigure_successful": "Reconfiguration was successful.",
+            "cannot_connect": "Could not connect to the discovered Healthbox.",
+            "no_matching_entry": "No configured Healthbox matches this device; ignoring.",
+            "wrong_device": "This host belongs to a different Healthbox than the one being reconfigured."
         }
     },
     "options": {
@@ -22,6 +35,9 @@
                     "api_key": "API Key"
                 }
             }
+        },
+        "error": {
+            "invalid_auth": "API Key is wrong."
         }
     }
 }

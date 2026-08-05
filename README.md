@@ -19,6 +19,13 @@ This is still a work in progress. If time permits, I'll try to push this to HACS
 ## Known Issues
 - Missing Branding
 
+## Changing the Host IP
+
+If your Healthbox's IP address changes (e.g. a router restart with no static DHCP lease), you no longer need to delete and re-add the integration:
+
+- **Automatic:** the integration recognizes your device by its serial number and detects when it requests a new DHCP lease (Healthbox 3 units broadcast a DHCP hostname of the form `HEALTHBOX3<serial>`). When that happens, Home Assistant updates the stored IP on its own — no action needed. This is passive discovery, so it isn't instant; it fires whenever the device's DHCP request is next seen on the network (e.g. at lease renewal or after a reboot).
+- **Manual (immediate fallback):** use **Settings → Devices & Services → Renson Healthbox → three-dot menu → Reconfigure** to update the host (and API key, if used) in place right away; your existing entities and automations keep working either way.
+
 ## Installation
 
 ### HACS

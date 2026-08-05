@@ -7,6 +7,12 @@
                     "host": "[%key:common::config_flow::data::host%]",
                     "api_key": "[%key:common::config_flow::data::password%]"
                 }
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "[%key:common::config_flow::data::host%]",
+                    "api_key": "[%key:common::config_flow::data::password%]"
+                }
             }
         },
         "error": {
@@ -15,7 +21,11 @@
             "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+            "cannot_connect": "Could not connect to the discovered Healthbox.",
+            "no_matching_entry": "No configured Healthbox matches this device; ignoring.",
+            "wrong_device": "This host belongs to a different Healthbox than the one being reconfigured."
         }
     },
     "options": {
@@ -28,9 +38,7 @@
             }
         },
         "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
         },
         "abort": {
             "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
