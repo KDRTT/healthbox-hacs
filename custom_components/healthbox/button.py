@@ -4,13 +4,13 @@ from __future__ import annotations
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from homeassistant.components.button import ButtonEntity
 
-from .const import DOMAIN, MANUFACTURER, HealthboxRoom
+from .const import DOMAIN, HealthboxRoom
 from .coordinator import HealthboxDataUpdateCoordinator
+from .entity import healthbox_room_device_info
 
 
 async def async_setup_entry(
@@ -42,6 +42,7 @@ class HealthboxStopBoostButton(
     card.
     """
 
+    _attr_has_entity_name = True
     _attr_icon = "mdi:fan-off"
     _attr_name = "Stop Boost"
 
@@ -55,14 +56,7 @@ class HealthboxStopBoostButton(
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}-{room.room_id}-stop_boost_button"
         )
-        self._attr_device_info = DeviceInfo(
-            name=room.name,
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.unique_id}_{room.room_id}")
-            },
-            manufacturer=MANUFACTURER,
-            model="Healthbox Room",
-        )
+        self._attr_device_info = healthbox_room_device_info(coordinator, room)
 
     async def async_press(self) -> None:
         """Stop the boost in this room."""

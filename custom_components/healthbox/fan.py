@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -23,10 +22,10 @@ from .const import (
     BOOST_LEVEL_RANGE,
     DOMAIN,
     LOGGER,
-    MANUFACTURER,
     HealthboxRoom,
 )
 from .coordinator import BoostDefaults, HealthboxDataUpdateCoordinator
+from .entity import find_room, healthbox_device_info, healthbox_room_device_info
 
 _SUPPORTED_FEATURES = (
     FanEntityFeature.TURN_ON
@@ -68,6 +67,7 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
     one boost without changing the configured default.
     """
 
+    _attr_has_entity_name = True
     _attr_supported_features = _SUPPORTED_FEATURES
     _attr_preset_modes = list(BOOST_DURATION_PRESETS)
 
@@ -218,27 +218,12 @@ class HealthboxRoomBoostFan(HealthboxBoostFan):
             f"{coordinator.config_entry.entry_id}-{room.room_id}-boost_fan"
         )
         self._attr_name = "Boost"
-        self._attr_device_info = DeviceInfo(
-            name=room.name,
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{coordinator.config_entry.unique_id}_{room.room_id}",
-                )
-            },
-            manufacturer=MANUFACTURER,
-            model="Healthbox Room",
-        )
+        self._attr_device_info = healthbox_room_device_info(coordinator, room)
 
     @property
     def _room(self):
         """Return the current room data from the coordinator, or None if missing."""
-        matching = [
-            room
-            for room in self.coordinator.api.rooms
-            if int(room.room_id) == self._room_id
-        ]
-        return matching[0] if matching else None
+        return find_room(self.coordinator, self._room_id)
 
     def _is_active(self) -> bool:
         room = self._room
@@ -291,12 +276,7 @@ class HealthboxAllRoomsBoostFan(HealthboxBoostFan):
         super().__init__(coordinator)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-boost_all_fan"
-        self._attr_device_info = DeviceInfo(
-            name=f"{coordinator.api.serial}",
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            manufacturer=MANUFACTURER,
-            model=coordinator.api.description,
-        )
+        self._attr_device_info = healthbox_device_info(coordinator)
 
     def _target_room_ids(self) -> list[int]:
         # int(...) here for the same reason as HealthboxRoomBoostFan.__init__

@@ -5,7 +5,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -15,11 +14,11 @@ from .const import (
     BOOST_DEFAULTS_ALL_ROOMS_KEY,
     BOOST_DURATION_PRESETS,
     DOMAIN,
-    MANUFACTURER,
     PROFILES,
     HealthboxRoom,
 )
 from .coordinator import HealthboxDataUpdateCoordinator
+from .entity import find_room, healthbox_device_info, healthbox_room_device_info
 
 
 async def async_setup_entry(
@@ -57,6 +56,7 @@ class HealthboxBoostDefaultDurationSelect(
     Used when no preset is explicitly chosen.
     """
 
+    _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
     _attr_options = list(BOOST_DURATION_PRESETS)
     _attr_icon = "mdi:timer-cog-outline"
@@ -77,25 +77,13 @@ class HealthboxBoostDefaultDurationSelect(
             self._attr_unique_id = (
                 f"{coordinator.config_entry.entry_id}-boost_all_default_duration"
             )
-            self._attr_device_info = DeviceInfo(
-                name=f"{coordinator.api.serial}",
-                identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-                manufacturer=MANUFACTURER,
-                model=coordinator.api.description,
-            )
+            self._attr_device_info = healthbox_device_info(coordinator)
         else:
             self._defaults_key = int(room.room_id)
             self._attr_unique_id = (
                 f"{coordinator.config_entry.entry_id}-{room.room_id}-boost_default_duration"
             )
-            self._attr_device_info = DeviceInfo(
-                name=room.name,
-                identifiers={
-                    (DOMAIN, f"{coordinator.config_entry.unique_id}_{room.room_id}")
-                },
-                manufacturer=MANUFACTURER,
-                model="Healthbox Room",
-            )
+            self._attr_device_info = healthbox_room_device_info(coordinator, room)
 
     @property
     def current_option(self) -> str:
@@ -127,6 +115,7 @@ class HealthboxRoomProfileSelect(
     action" pattern boost got in Plan 003.
     """
 
+    _attr_has_entity_name = True
     _attr_options = PROFILES
     _attr_icon = "mdi:account-box"
     _attr_name = "Profile"
@@ -139,24 +128,12 @@ class HealthboxRoomProfileSelect(
 
         self._room_id: int = int(room.room_id)
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{room.room_id}-profile"
-        self._attr_device_info = DeviceInfo(
-            name=room.name,
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.unique_id}_{room.room_id}")
-            },
-            manufacturer=MANUFACTURER,
-            model="Healthbox Room",
-        )
+        self._attr_device_info = healthbox_room_device_info(coordinator, room)
 
     @property
     def _room(self):
         """Return the current room data from the coordinator, or None if missing."""
-        matching = [
-            room
-            for room in self.coordinator.api.rooms
-            if int(room.room_id) == self._room_id
-        ]
-        return matching[0] if matching else None
+        return find_room(self.coordinator, self._room_id)
 
     @property
     def current_option(self) -> str | None:

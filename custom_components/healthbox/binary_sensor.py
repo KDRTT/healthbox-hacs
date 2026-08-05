@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from homeassistant.components.binary_sensor import (
@@ -16,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 
 from .const import DOMAIN, HealthboxRoom, LOGGER
 from .coordinator import HealthboxDataUpdateCoordinator
+from .entity import find_room, healthbox_room_device_info
 
 
 @dataclass
@@ -44,7 +44,7 @@ def generate_binary_room_sensors_for_healthbox(
             room_binary_sensors.append(
                 HealthboxRoomBinarySensorEntityDescription(
                     key=f"{room.room_id}_boost_status",
-                    name=f"{room.name} Boost Status",
+                    name="Boost Status",
                     room=room,
                     is_on=lambda x: x.boost.enabled
                 )
@@ -79,6 +79,7 @@ class HealthboxRoomBinarySensor(
 ):
     """Representation of a Healthbox Room Sensor."""
 
+    _attr_has_entity_name = True
     entity_description: HealthboxRoomBinarySensorEntityDescription
 
     def __init__(
@@ -92,32 +93,19 @@ class HealthboxRoomBinarySensor(
         self.entity_description = description
         self._attr_unique_id = f"{
             coordinator.config_entry.entry_id}-{description.room.room_id}-{description.key}"
-        self._attr_name = f"{description.name}"
-        self._attr_device_info = DeviceInfo(
-            name=self.entity_description.room.name,
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{coordinator.config_entry.unique_id}_{
-                        self.entity_description.room.room_id}",
-                )
-            },
-            manufacturer="Renson",
-            model="Healthbox Room",
+        self._attr_name = description.name
+        self._attr_device_info = healthbox_room_device_info(
+            coordinator, description.room
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Binary Sensor native value."""
         room_id: int = int(self.entity_description.room.room_id)
+        room = find_room(self.coordinator, room_id)
 
-        matching_room = [
-            room for room in self.coordinator.api.rooms if int(room.room_id) == room_id
-        ]
+        if room is None:
+            LOGGER.error("No matching room found for id %s", room_id)
+            return None
 
-        if len(matching_room) != 1:
-            error_msg: str = f"No matching room found for id {room_id}"
-            LOGGER.error(error_msg)
-        else:
-            matching_room = matching_room[0]
-            return self.entity_description.is_on(matching_room)
+        return self.entity_description.is_on(room)

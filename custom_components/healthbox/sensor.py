@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from homeassistant.const import (
@@ -32,8 +31,9 @@ from homeassistant.components.sensor import (
 )
 
 
-from .const import DOMAIN, MANUFACTURER, HealthboxRoom, LOGGER
+from .const import DOMAIN, HealthboxRoom, LOGGER
 from .coordinator import HealthboxDataUpdateCoordinator
+from .entity import find_room, healthbox_device_info, healthbox_room_device_info
 
 
 def _format_remaining(seconds: float | None) -> str | None:
@@ -92,7 +92,7 @@ def generate_room_sensors_for_healthbox(
                 room_sensors.append(
                     HealthboxRoomSensorEntityDescription(
                         key=f"{room.room_id}_temperature",
-                        name=f"{room.name} Temperature",
+                        name="Temperature",
                         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                         icon="mdi:thermometer",
                         device_class=SensorDeviceClass.TEMPERATURE,
@@ -106,7 +106,7 @@ def generate_room_sensors_for_healthbox(
                 room_sensors.append(
                     HealthboxRoomSensorEntityDescription(
                         key=f"{room.room_id}_humidity",
-                        name=f"{room.name} Humidity",
+                        name="Humidity",
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:water-percent",
                         device_class=SensorDeviceClass.HUMIDITY,
@@ -121,7 +121,7 @@ def generate_room_sensors_for_healthbox(
                     room_sensors.append(
                         HealthboxRoomSensorEntityDescription(
                             key=f"{room.room_id}_co2_concentration",
-                            name=f"{room.name} CO2 Concentration",
+                            name="CO2 Concentration",
                             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                             icon="mdi:molecule-co2",
                             device_class=SensorDeviceClass.CO2,
@@ -136,7 +136,7 @@ def generate_room_sensors_for_healthbox(
                     room_sensors.append(
                         HealthboxRoomSensorEntityDescription(
                             key=f"{room.room_id}_aqi",
-                            name=f"{room.name} Air Quality Index",
+                            name="Air Quality Index",
                             native_unit_of_measurement=None,
                             icon="mdi:leaf",
                             device_class=SensorDeviceClass.AQI,
@@ -151,7 +151,7 @@ def generate_room_sensors_for_healthbox(
                     room_sensors.append(
                         HealthboxRoomSensorEntityDescription(
                             key=f"{room.room_id}_voc",
-                            name=f"{room.name} Volatile Organic Compounds",
+                            name="Volatile Organic Compounds",
                             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                             icon="mdi:leaf",
                             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
@@ -167,7 +167,7 @@ def generate_room_sensors_for_healthbox(
             room_sensors.append(
                 HealthboxRoomSensorEntityDescription(
                     key=f"{room.room_id}_boost_level",
-                    name=f"{room.name} Boost Level",
+                    name="Boost Level",
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:fan",
                     # device_class=SensorDeviceClass.,
@@ -180,7 +180,7 @@ def generate_room_sensors_for_healthbox(
             room_sensors.append(
                 HealthboxRoomSensorEntityDescription(
                     key=f"{room.room_id}_boost_remaining",
-                    name=f"{room.name} Boost Remaining",
+                    name="Boost Remaining",
                     native_unit_of_measurement=UnitOfTime.SECONDS,
                     device_class=SensorDeviceClass.DURATION,
                     icon="mdi:clock-time-five-outline",
@@ -192,7 +192,7 @@ def generate_room_sensors_for_healthbox(
             room_sensors.append(
                 HealthboxRoomSensorEntityDescription(
                     key=f"{room.room_id}_boost_remaining_formatted",
-                    name=f"{room.name} Boost Remaining (Formatted)",
+                    name="Boost Remaining (Formatted)",
                     icon="mdi:clock-time-five-outline",
                     room=room,
                     value_fn=lambda x: _format_remaining(x.boost.remaining),
@@ -202,7 +202,7 @@ def generate_room_sensors_for_healthbox(
             room_sensors.append(
                 HealthboxRoomSensorEntityDescription(
                     key=f"{room.room_id}_airflow_ventilation_rate",
-                    name=f"{room.name} Airflow Ventilation Rate",
+                    name="Airflow Ventilation Rate",
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:fan",
                     # device_class=SensorDeviceClass.,
@@ -216,7 +216,7 @@ def generate_room_sensors_for_healthbox(
             room_sensors.append(
                 HealthboxRoomSensorEntityDescription(
                     key=f"{room.room_id}_profile",
-                    name=f"{room.name} Profile",
+                    name="Profile",
                     icon="mdi:account-box",
                     room=room,
                     value_fn=lambda x: x.profile_name,
@@ -376,8 +376,9 @@ async def async_setup_entry(
 class HealthboxGlobalSensor(
     CoordinatorEntity[HealthboxDataUpdateCoordinator], SensorEntity
 ):
-    """Representation of a Healthbox  Room Sensor."""
+    """Representation of a Healthbox device-wide sensor."""
 
+    _attr_has_entity_name = True
     entity_description: HealthboxGlobalSensorEntityDescription
 
     def __init__(
@@ -391,15 +392,8 @@ class HealthboxGlobalSensor(
         self.entity_description = description
         self._attr_unique_id = f"{
             coordinator.config_entry.entry_id}-{description.key}"
-        self._attr_name = f"Healthbox {description.name}"
-        self._attr_device_info = DeviceInfo(
-            name=f"{coordinator.api.serial}",
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            manufacturer=MANUFACTURER,
-            model=coordinator.api.description,
-            hw_version=coordinator.api.warranty_number,
-            sw_version=coordinator.api.firmware_version,
-        )
+        self._attr_name = description.name
+        self._attr_device_info = healthbox_device_info(coordinator)
 
     @property
     def native_value(self) -> float | int | str | Decimal:
@@ -412,6 +406,7 @@ class HealthboxRoomSensor(
 ):
     """Representation of a Healthbox Room Sensor."""
 
+    _attr_has_entity_name = True
     entity_description: HealthboxRoomSensorEntityDescription
 
     def __init__(
@@ -425,34 +420,19 @@ class HealthboxRoomSensor(
         self.entity_description = description
         self._attr_unique_id = f"{
             coordinator.config_entry.entry_id}-{description.room.room_id}-{description.key}"
-        self._attr_name = f"{description.name}"
-        self._attr_device_info = DeviceInfo(
-            name=self.entity_description.room.name,
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{coordinator.config_entry.unique_id}_{
-                        self.entity_description.room.room_id}",
-                )
-            },
-            manufacturer="Renson",
-            model="Healthbox Room",
+        self._attr_name = description.name
+        self._attr_device_info = healthbox_room_device_info(
+            coordinator, description.room
         )
 
     @property
     def native_value(self) -> float | int | str | Decimal:
         """Sensor native value."""
         room_id: int = int(self.entity_description.room.room_id)
+        room = find_room(self.coordinator, room_id)
 
-        matching_room = [
-            room for room in self.coordinator.api.rooms if int(room.room_id) == room_id
-        ]
+        if room is None:
+            LOGGER.error("No matching room found for id %s", room_id)
+            return None
 
-        if len(matching_room) != 1:
-            error_msg: str = f"No matching room found for id {room_id}"
-            LOGGER.error(error_msg)
-        else:
-            matching_room = matching_room[0]
-            return self.entity_description.value_fn(matching_room)
-
-        return None
+        return self.entity_description.value_fn(room)

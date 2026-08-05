@@ -5,7 +5,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, PERCENTAGE
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from homeassistant.components.number import NumberEntity, RestoreNumber
@@ -14,10 +13,10 @@ from .const import (
     BOOST_DEFAULTS_ALL_ROOMS_KEY,
     BOOST_LEVEL_RANGE,
     DOMAIN,
-    MANUFACTURER,
     HealthboxRoom,
 )
 from .coordinator import HealthboxDataUpdateCoordinator
+from .entity import healthbox_device_info, healthbox_room_device_info
 
 
 async def async_setup_entry(
@@ -50,6 +49,7 @@ class HealthboxBoostDefaultLevelNumber(
     the slider).
     """
 
+    _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_native_min_value = BOOST_LEVEL_RANGE[0]
@@ -73,25 +73,13 @@ class HealthboxBoostDefaultLevelNumber(
             self._attr_unique_id = (
                 f"{coordinator.config_entry.entry_id}-boost_all_default_level"
             )
-            self._attr_device_info = DeviceInfo(
-                name=f"{coordinator.api.serial}",
-                identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-                manufacturer=MANUFACTURER,
-                model=coordinator.api.description,
-            )
+            self._attr_device_info = healthbox_device_info(coordinator)
         else:
             self._defaults_key = int(room.room_id)
             self._attr_unique_id = (
                 f"{coordinator.config_entry.entry_id}-{room.room_id}-boost_default_level"
             )
-            self._attr_device_info = DeviceInfo(
-                name=room.name,
-                identifiers={
-                    (DOMAIN, f"{coordinator.config_entry.unique_id}_{room.room_id}")
-                },
-                manufacturer=MANUFACTURER,
-                model="Healthbox Room",
-            )
+            self._attr_device_info = healthbox_room_device_info(coordinator, room)
 
     @property
     def native_value(self) -> float:
