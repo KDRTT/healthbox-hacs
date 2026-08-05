@@ -51,6 +51,10 @@ DEFAULT_BOOST_LEVEL = 100
 # own default, distinct from any real (int) room id.
 BOOST_DEFAULTS_ALL_ROOMS_KEY = "all"
 
+# Matches services.yaml's change_room_profile options and
+# pyhealthbox3's Healthbox3Room.profile_name (a .capitalize()'d string).
+PROFILES = ["Eco", "Health", "Intense"]
+
 SERVICE_CHANGE_ROOM_PROFILE = "change_room_profile"
 SERVICE_CHANGE_ROOM_PROFILE_SCHEMA = vol.Schema(
     {

@@ -16,6 +16,7 @@ from .const import (
     BOOST_DURATION_PRESETS,
     DOMAIN,
     MANUFACTURER,
+    PROFILES,
     HealthboxRoom,
 )
 from .coordinator import HealthboxDataUpdateCoordinator
@@ -33,11 +34,17 @@ async def async_setup_entry(
 
     boost_rooms = [room for room in coordinator.api.rooms if room.boost is not None]
 
-    entities = [
+    entities: list[CoordinatorEntity] = [
         HealthboxBoostDefaultDurationSelect(coordinator, room) for room in boost_rooms
     ]
     if boost_rooms:
         entities.append(HealthboxBoostDefaultDurationSelect(coordinator, None))
+
+    entities.extend(
+        HealthboxRoomProfileSelect(coordinator, room)
+        for room in coordinator.api.rooms
+        if room.profile_name is not None
+    )
 
     async_add_entities(entities)
 
@@ -108,3 +115,58 @@ class HealthboxBoostDefaultDurationSelect(
         """Update the configured default boost duration."""
         self.coordinator.get_boost_defaults(self._defaults_key).duration_preset = option
         self.async_write_ha_state()
+
+
+class HealthboxRoomProfileSelect(
+    CoordinatorEntity[HealthboxDataUpdateCoordinator], SelectEntity
+):
+    """The room's ventilation profile (Eco/Health/Intense).
+
+    Wraps the existing change_room_profile service/coordinator method as
+    an entity - same "prefer a default HA entity over a service-call-only
+    action" pattern boost got in Plan 003.
+    """
+
+    _attr_options = PROFILES
+    _attr_icon = "mdi:account-box"
+    _attr_name = "Profile"
+
+    def __init__(
+        self, coordinator: HealthboxDataUpdateCoordinator, room: HealthboxRoom
+    ) -> None:
+        """Initialize the room profile select entity."""
+        super().__init__(coordinator)
+
+        self._room_id: int = int(room.room_id)
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{room.room_id}-profile"
+        self._attr_device_info = DeviceInfo(
+            name=room.name,
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.unique_id}_{room.room_id}")
+            },
+            manufacturer=MANUFACTURER,
+            model="Healthbox Room",
+        )
+
+    @property
+    def _room(self):
+        """Return the current room data from the coordinator, or None if missing."""
+        matching = [
+            room
+            for room in self.coordinator.api.rooms
+            if int(room.room_id) == self._room_id
+        ]
+        return matching[0] if matching else None
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the room's current ventilation profile."""
+        room = self._room
+        return room.profile_name if room else None
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the room's ventilation profile."""
+        await self.coordinator.change_room_profile(
+            room_id=self._room_id, profile_name=option
+        )
+        await self.coordinator.async_request_refresh()

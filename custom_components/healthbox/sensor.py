@@ -20,7 +20,6 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfVolumeFlowRate,
     UnitOfElectricPotential,
-    UnitOfTime
 )
 
 
@@ -34,6 +33,22 @@ from homeassistant.components.sensor import (
 
 from .const import DOMAIN, MANUFACTURER, HealthboxRoom, LOGGER
 from .coordinator import HealthboxDataUpdateCoordinator
+
+
+def _format_remaining(seconds: float | None) -> str | None:
+    """Format a countdown in seconds as e.g. "1h 2m 3s", omitting leading zero units."""
+    if seconds is None:
+        return None
+    total_seconds = int(seconds)
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    parts = []
+    if hours:
+        parts.append(f"{hours}h")
+    if hours or minutes:
+        parts.append(f"{minutes}m")
+    parts.append(f"{secs}s")
+    return " ".join(parts)
 
 
 @dataclass
@@ -83,7 +98,7 @@ def generate_room_sensors_for_healthbox(
                         state_class=SensorStateClass.MEASUREMENT,
                         room=room,
                         value_fn=lambda x: x.indoor_temperature,
-                        suggested_display_precision=2,
+                        suggested_display_precision=1,
                     ),
                 )
             if "indoor relative humidity" in room.enabled_sensors:
@@ -97,7 +112,7 @@ def generate_room_sensors_for_healthbox(
                         state_class=SensorStateClass.MEASUREMENT,
                         room=room,
                         value_fn=lambda x: x.indoor_humidity,
-                        suggested_display_precision=2,
+                        suggested_display_precision=1,
                     ),
                 )
             if "indoor CO2" in room.enabled_sensors:
@@ -112,7 +127,7 @@ def generate_room_sensors_for_healthbox(
                             state_class=SensorStateClass.MEASUREMENT,
                             room=room,
                             value_fn=lambda x: x.indoor_co2_concentration,
-                            suggested_display_precision=2,
+                            suggested_display_precision=0,
                         ),
                     )
             if "indoor air quality index" in room.enabled_sensors:
@@ -158,18 +173,16 @@ def generate_room_sensors_for_healthbox(
                     state_class=SensorStateClass.MEASUREMENT,
                     room=room,
                     value_fn=lambda x: x.boost.level,
-                    suggested_display_precision=2,
+                    suggested_display_precision=0,
                 ),
             )
             room_sensors.append(
                 HealthboxRoomSensorEntityDescription(
                     key=f"{room.room_id}_boost_remaining",
                     name=f"{room.name} Boost Remaining",
-                    native_unit_of_measurement=UnitOfTime.SECONDS,
                     icon="mdi:clock-time-five-outline",
-                    state_class=SensorStateClass.MEASUREMENT,
                     room=room,
-                    value_fn=lambda x: x.boost.remaining
+                    value_fn=lambda x: _format_remaining(x.boost.remaining),
                 ),
             )
         if room.airflow_ventilation_rate is not None:
@@ -183,7 +196,7 @@ def generate_room_sensors_for_healthbox(
                     state_class=SensorStateClass.MEASUREMENT,
                     room=room,
                     value_fn=lambda x: x.airflow_ventilation_rate * 100,
-                    suggested_display_precision=2,
+                    suggested_display_precision=0,
                 ),
             )
         if room.profile_name is not None:

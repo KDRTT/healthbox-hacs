@@ -85,18 +85,22 @@ By default:
 * Global Air Quality Index
 * Serial Number
 * Warranty Number
-* Boost Level per room
-* Boost Time Remaining and Status
-* Airflow Ventilation Rate
+* Boost Level per room (rounded to a whole %)
+* Boost Time Remaining (formatted as e.g. `1h 2m 3s`, not raw seconds) and Status
+* Airflow Ventilation Rate (rounded to a whole %)
 * Device Fan Power measurements
-* Profile
+* Profile (read-only sensor; also settable, see **Ventilation Profile** below)
 
 If the API key is provided this integration will enabled the advanced API features which will expose the following sensors per room (if available):
-* Temperature
-* Humidity
+* Temperature (1 decimal)
+* Humidity (1 decimal)
 * Air Quality Index
-* CO2 Concentration
+* CO2 Concentration (rounded to a whole ppm)
 * Volatile Organic Compounds
+
+## Ventilation Profile
+
+Each room also gets a **Profile** Select entity (Eco/Health/Intense) - lets you change the room's ventilation profile directly from the dashboard, same effect as the `change_room_profile` service below.
 
 ## Boost Control
 
