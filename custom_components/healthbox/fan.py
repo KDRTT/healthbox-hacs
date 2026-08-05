@@ -85,10 +85,10 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
         raise NotImplementedError
 
     def _current_level(self) -> int:
-        """Best-effort "level currently running", for adjusting preset_mode
-        in place without also changing the level. Falls back to the
-        configured default where there's no live value to read (see
-        subclasses).
+        """Best-effort "level currently running", for adjusting preset_mode in place.
+
+        Falls back to the configured default where there's no live value to
+        read (see subclasses).
         """
         return self._defaults().level
 
@@ -130,8 +130,10 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Start a boost. With no percentage/preset_mode given, uses this
-        zone's configured defaults.
+        """Start a boost.
+
+        With no percentage/preset_mode given, uses this zone's configured
+        defaults.
         """
         self._check_rooms_exist()
         defaults = self._defaults()
@@ -167,8 +169,9 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Adjust the duration of an already-active boost (same "only
-        while on" behavior as async_set_percentage).
+        """Adjust the duration of an already-active boost.
+
+        Same "only while on" behavior as async_set_percentage.
         """
         self._check_rooms_exist()
         if not self.is_on:

@@ -44,8 +44,10 @@ async def async_setup_entry(
 class HealthboxBoostDefaultLevelNumber(
     CoordinatorEntity[HealthboxDataUpdateCoordinator], RestoreNumber, NumberEntity
 ):
-    """The boost level a zone's fan starts at when just toggled on, with
-    no percentage explicitly chosen (e.g. a quick tap, not the slider).
+    """The boost level a zone's fan starts at when just toggled on.
+
+    Used when no percentage is explicitly chosen (e.g. a quick tap, not
+    the slider).
     """
 
     _attr_entity_category = EntityCategory.CONFIG

@@ -45,8 +45,9 @@ async def async_setup_entry(
 class HealthboxBoostDefaultDurationSelect(
     CoordinatorEntity[HealthboxDataUpdateCoordinator], RestoreEntity, SelectEntity
 ):
-    """The boost duration a zone's fan starts at when just toggled on, with
-    no preset explicitly chosen.
+    """The boost duration a zone's fan starts at when just toggled on.
+
+    Used when no preset is explicitly chosen.
     """
 
     _attr_entity_category = EntityCategory.CONFIG

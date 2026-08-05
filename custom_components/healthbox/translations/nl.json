@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "description": "Als je hulp nodig hebt bij de configuratie, kijk dan hier: https://github.com/rmassch/healthbox3",
+                "description": "Voer de verbindingsgegevens in voor je Renson Healthbox 3.",
                 "data": {
                     "host": "IP-adres",
                     "api_key": "API-sleutel"

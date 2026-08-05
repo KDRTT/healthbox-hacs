@@ -72,9 +72,7 @@ class HealthboxDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     def get_boost_defaults(self, key: int | str) -> BoostDefaults:
-        """Return (creating if needed) the boost defaults for a room id or
-        BOOST_DEFAULTS_ALL_ROOMS_KEY.
-        """
+        """Return the boost defaults for a room id or BOOST_DEFAULTS_ALL_ROOMS_KEY, creating them if needed."""
         return self.boost_defaults.setdefault(key, BoostDefaults())
 
     async def change_room_profile(
