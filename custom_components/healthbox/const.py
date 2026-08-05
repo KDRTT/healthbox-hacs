@@ -17,7 +17,21 @@ MANUFACTURER = "Renson"
 ATTRIBUTION = ""
 SCAN_INTERVAL = timedelta(seconds=5)
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.FAN]
+
+# Duration presets offered by the room boost Fan entity, label -> seconds.
+# Curated subset of the existing start_room_boost service's raw 5-720 minute
+# range (see SERVICE_START_ROOM_BOOST_SCHEMA below) - a fan card's
+# preset_mode is a fixed list, not a free-form slider.
+BOOST_DURATION_PRESETS: dict[str, int] = {
+    "5 min": 300,
+    "15 min": 900,
+    "30 min": 1800,
+    "1 hour": 3600,
+    "2 hours": 7200,
+    "4 hours": 14400,
+}
+DEFAULT_BOOST_DURATION_PRESET = "30 min"
 
 SERVICE_CHANGE_ROOM_PROFILE = "change_room_profile"
 SERVICE_CHANGE_ROOM_PROFILE_SCHEMA = vol.Schema(
