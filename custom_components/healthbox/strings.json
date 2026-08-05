@@ -13,6 +13,11 @@
                     "host": "[%key:common::config_flow::data::host%]",
                     "api_key": "[%key:common::config_flow::data::password%]"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "[%key:common::config_flow::data::password%]"
+                }
             }
         },
         "error": {
@@ -23,6 +28,7 @@
         "abort": {
             "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
             "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
             "cannot_connect": "Could not connect to the discovered Healthbox.",
             "no_matching_entry": "No configured Healthbox matches this device; ignoring.",
             "wrong_device": "This host belongs to a different Healthbox than the one being reconfigured."

@@ -14,6 +14,12 @@
                     "host": "IP Address",
                     "api_key": "API Key"
                 }
+            },
+            "reauth_confirm": {
+                "description": "Your Healthbox's API key stopped working. Enter a new one to keep advanced features enabled.",
+                "data": {
+                    "api_key": "API Key"
+                }
             }
         },
         "error": {
@@ -23,6 +29,7 @@
         },
         "abort": {
             "reconfigure_successful": "Reconfiguration was successful.",
+            "reauth_successful": "Re-authentication was successful.",
             "cannot_connect": "Could not connect to the discovered Healthbox.",
             "no_matching_entry": "No configured Healthbox matches this device; ignoring.",
             "wrong_device": "This host belongs to a different Healthbox than the one being reconfigured."

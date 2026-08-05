@@ -14,6 +14,12 @@
                     "host": "IP-adres",
                     "api_key": "API-sleutel"
                 }
+            },
+            "reauth_confirm": {
+                "description": "De API-sleutel van je Healthbox werkt niet meer. Voer een nieuwe in om de geavanceerde functies actief te houden.",
+                "data": {
+                    "api_key": "API-sleutel"
+                }
             }
         },
         "error": {
@@ -23,6 +29,7 @@
         },
         "abort": {
             "reconfigure_successful": "Herconfiguratie is gelukt.",
+            "reauth_successful": "Herauthenticatie is gelukt.",
             "cannot_connect": "Kon geen verbinding maken met de gevonden Healthbox.",
             "no_matching_entry": "Geen geconfigureerde Healthbox komt overeen met dit apparaat; genegeerd.",
             "wrong_device": "Dit adres hoort bij een andere Healthbox dan degene die wordt geherconfigureerd."

@@ -180,6 +180,58 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         return self.async_abort(reason="no_matching_entry")
 
+    async def async_step_reauth(
+        self, entry_data: dict[str, Any]
+    ) -> FlowResult:
+        """Handle reauth when the API key stops working (e.g. after a device factory reset).
+
+        Triggered by coordinator.py raising ConfigEntryAuthFailed - HA
+        core calls this automatically, we just need to collect a new key.
+        """
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Ask for a replacement API key and verify it before saving."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            try:
+                await self._test_credentials(
+                    ipaddress=reauth_entry.data[CONF_HOST],
+                    apikey=user_input[CONF_API_KEY],
+                )
+            except Healthbox3ApiClientAuthenticationError as exception:
+                LOGGER.warning(exception)
+                errors["base"] = "auth"
+            except Healthbox3ApiClientCommunicationError as exception:
+                LOGGER.error(exception)
+                errors["base"] = "connection"
+            except Healthbox3ApiClientError as exception:
+                LOGGER.exception(exception)
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data={**reauth_entry.data, CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): selector.TextSelector(
+                        selector.TextSelectorConfig(
+                            type=selector.TextSelectorType.PASSWORD
+                        ),
+                    ),
+                }
+            ),
+            errors=errors,
+        )
+
     async def _test_credentials(self, ipaddress: str, apikey: str) -> None:
         """Validate credentials."""
         client = Healthbox3(
