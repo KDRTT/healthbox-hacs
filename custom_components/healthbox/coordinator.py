@@ -1,6 +1,8 @@
 """DataUpdateCoordinator for healthbox."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST
@@ -19,10 +21,28 @@ from pyhealthbox3.healthbox3 import (
 )
 
 from .const import (
+    DEFAULT_BOOST_DURATION_PRESET,
+    DEFAULT_BOOST_LEVEL,
     DOMAIN,
     LOGGER,
     SCAN_INTERVAL,
 )
+
+
+@dataclass
+class BoostDefaults:
+    """A zone's configured "what a plain boost toggle-on should do".
+
+    Lives on the coordinator, shared between each zone's Fan (reads it for
+    a plain turn_on with no explicit percentage/preset_mode) and its
+    Number/Select "Default Boost Level"/"Default Boost Duration" entities
+    (the only things that ever write to it). The dataclass instance itself
+    is the source of truth; the config entities are just a UI for it and
+    restore its fields from their own RestoreEntity state at startup.
+    """
+
+    level: int = DEFAULT_BOOST_LEVEL
+    duration_preset: str = DEFAULT_BOOST_DURATION_PRESET
 
 
 # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
@@ -42,6 +62,7 @@ class HealthboxDataUpdateCoordinator(DataUpdateCoordinator):
         self.config_entry = entry
         self.host: str = entry.data[CONF_HOST]
         self.api: Healthbox3 = api
+        self.boost_defaults: dict[int | str, BoostDefaults] = {}
 
         super().__init__(
             hass=hass,
@@ -49,6 +70,12 @@ class HealthboxDataUpdateCoordinator(DataUpdateCoordinator):
             name=f"{DOMAIN} - {self.host}",
             update_interval=SCAN_INTERVAL,
         )
+
+    def get_boost_defaults(self, key: int | str) -> BoostDefaults:
+        """Return (creating if needed) the boost defaults for a room id or
+        BOOST_DEFAULTS_ALL_ROOMS_KEY.
+        """
+        return self.boost_defaults.setdefault(key, BoostDefaults())
 
     async def change_room_profile(
         self, room_id: int, profile_name: str

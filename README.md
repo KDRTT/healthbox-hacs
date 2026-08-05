@@ -98,6 +98,14 @@ If the API key is provided this integration will enabled the advanced API featur
 * CO2 Concentration
 * Volatile Organic Compounds
 
+## Boost Control
+
+Each room with boost support gets a **Fan** entity (`Boost`), plus a **Boost All Rooms** fan that boosts every room at once at one shared level/duration (mirrors the Renson app's own "boost all"). A plain tap of the toggle starts boost at that zone's configured defaults — no need to dial in the slider/preset every time:
+
+- **Default Boost Level** (Number, 10-200%) and **Default Boost Duration** (Select) — one pair per room, plus one pair for "all rooms". Configure these once; the fan's toggle then uses them.
+- **Stop Boost** (Button) — a one-tap way to stop a room's boost, same effect as turning its fan off.
+- The fan's own percentage slider/preset dropdown still work as usual for a one-off adjustment to an already-running boost, without changing the configured default.
+
 ## Services
 ### Start Room Boost
 | parameter       | type        | required | description                                     |

@@ -17,7 +17,20 @@ MANUFACTURER = "Renson"
 ATTRIBUTION = ""
 SCAN_INTERVAL = timedelta(seconds=5)
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.FAN]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.BUTTON,
+]
+
+# Boost level range on the wire is 10-200%, not 0-100 - see
+# start_room_boost's own service schema below. Shared by fan.py (rescaling
+# onto a 0-100 fan percentage) and number.py (the default-level entity,
+# which uses the real range directly).
+BOOST_LEVEL_RANGE = (10, 200)
 
 # Duration presets offered by the room boost Fan entity, label -> seconds.
 # Curated subset of the existing start_room_boost service's raw 5-720 minute
@@ -32,6 +45,11 @@ BOOST_DURATION_PRESETS: dict[str, int] = {
     "4 hours": 14400,
 }
 DEFAULT_BOOST_DURATION_PRESET = "30 min"
+DEFAULT_BOOST_LEVEL = 100
+
+# Sentinel coordinator.boost_defaults key for the "all rooms" boost fan's
+# own default, distinct from any real (int) room id.
+BOOST_DEFAULTS_ALL_ROOMS_KEY = "all"
 
 SERVICE_CHANGE_ROOM_PROFILE = "change_room_profile"
 SERVICE_CHANGE_ROOM_PROFILE_SCHEMA = vol.Schema(
