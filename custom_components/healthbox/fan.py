@@ -73,6 +73,19 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
 
     _defaults_key: int | str
 
+    def __init__(self, coordinator: HealthboxDataUpdateCoordinator) -> None:
+        """Initialize shared boost-fan state."""
+        super().__init__(coordinator)
+        # The device only ever reports the *active* boost's level (readable
+        # live via .boost.level) and a countdown (.remaining) - never the
+        # duration it was started with. So unlike level, there's nothing to
+        # read this back from; it's tracked locally, seeded from the
+        # configured default (None = "not yet explicitly set") and updated
+        # on every explicit turn_on(preset_mode=...)/set_preset_mode call
+        # so the dropdown actually reflects what was last commanded
+        # instead of snapping back to the default.
+        self._current_duration_preset: str | None = None
+
     # --- overridden by subclasses ---
 
     def _target_room_ids(self) -> list[int]:
@@ -116,13 +129,16 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
 
     @property
     def preset_mode(self) -> str:
-        """Return the configured default boost duration.
+        """Return the duration currently in effect.
 
-        There's no "current duration" to read back from the device (only
-        .remaining, a countdown) - this always reflects the configured
-        default, whether boost is on or off.
+        Reflects whatever was last explicitly commanded (via
+        turn_on(preset_mode=...) or set_preset_mode) - not the configured
+        default, once anything's actually been chosen. Falls back to the
+        configured default only before that's ever happened (nothing to
+        show otherwise), since there's no way to read a boost's original
+        duration back from the device (only .remaining, a countdown).
         """
-        return self._defaults().duration_preset
+        return self._current_duration_preset or self._defaults().duration_preset
 
     async def async_turn_on(
         self,
@@ -132,8 +148,9 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
     ) -> None:
         """Start a boost.
 
-        With no percentage/preset_mode given, uses this zone's configured
-        defaults.
+        With no percentage/preset_mode given (a plain toggle-on), uses
+        this zone's configured defaults - anything explicitly passed
+        overrides just that axis for this boost.
         """
         self._check_rooms_exist()
         defaults = self._defaults()
@@ -143,6 +160,7 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
             else defaults.level
         )
         duration_preset = preset_mode if preset_mode is not None else defaults.duration_preset
+        self._current_duration_preset = duration_preset
         await self._async_apply(enable=True, level=level, duration_preset=duration_preset)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -151,7 +169,7 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
         await self._async_apply(enable=False)
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Start (or adjust) a boost at this level.
+        """Start (or adjust) a boost at this level, keeping the current duration.
 
         Deliberately *not* the "only adjusts while already on" behavior
         some fan integrations use - for a boost control, picking a level
@@ -164,17 +182,17 @@ class HealthboxBoostFan(CoordinatorEntity[HealthboxDataUpdateCoordinator], FanEn
             await self._async_apply(enable=False)
             return
         level = round(percentage_to_ranged_value(BOOST_LEVEL_RANGE, percentage))
-        await self._async_apply(
-            enable=True, level=level, duration_preset=self._defaults().duration_preset
-        )
+        duration_preset = self._current_duration_preset or self._defaults().duration_preset
+        await self._async_apply(enable=True, level=level, duration_preset=duration_preset)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Start (or adjust) a boost at this duration, on or off.
+        """Start (or adjust) a boost at this duration, keeping the current level.
 
         See async_set_percentage's docstring for why this doesn't require
         the fan to already be on.
         """
         self._check_rooms_exist()
+        self._current_duration_preset = preset_mode
         await self._async_apply(
             enable=True, level=self._current_level(), duration_preset=preset_mode
         )
