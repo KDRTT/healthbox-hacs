@@ -19,6 +19,6 @@
     "pyhealthbox3==0.0.22"
   ],
   "ssdp": [],
-  "version": "0.0.1",
+  "version": "0.1.0",
   "zeroconf": []
 }
