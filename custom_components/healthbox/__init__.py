@@ -1,6 +1,10 @@
 """The Renson Healthbox integration."""
 from __future__ import annotations
 
+from pathlib import Path
+
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -24,6 +28,31 @@ from .const import (
 
 from .coordinator import HealthboxDataUpdateCoordinator
 from .discovery import async_fetch_serial
+
+CARD_URL_BASE = "/healthbox_files"
+CARD_VERSION = "3.1.0"  # keep in sync with CARD_VERSION in www/ventilation-boost-card.js
+_FRONTEND_REGISTERED_KEY = f"{DOMAIN}_frontend_registered"
+
+
+async def _async_register_frontend_card(hass: HomeAssistant) -> None:
+    """Serve the bundled Lovelace card and register it as a resource.
+
+    Guarded by a hass.data flag so it only runs once regardless of how many
+    config entries exist or how often they're reloaded - re-registering the
+    same static path raises, and duplicate add_extra_js_url calls would load
+    the card's JS (and its customElements.define call) more than once.
+    """
+    if hass.data.get(_FRONTEND_REGISTERED_KEY):
+        return
+
+    www_dir = Path(__file__).parent / "www"
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(CARD_URL_BASE, str(www_dir), False)]
+    )
+    add_extra_js_url(
+        hass, f"{CARD_URL_BASE}/ventilation-boost-card.js?v={CARD_VERSION}"
+    )
+    hass.data[_FRONTEND_REGISTERED_KEY] = True
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -54,6 +83,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Renson Healthbox from a config entry."""
+    await _async_register_frontend_card(hass)
+
     api_key = None
 
     if CONF_API_KEY in entry.data:

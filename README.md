@@ -121,6 +121,25 @@ Each room with boost support gets a **Fan** entity (`Boost`), plus a **Boost All
 - **Stop Boost** (Button) — a one-tap way to stop a room's boost, same effect as turning its fan off.
 - The fan's own percentage slider/preset dropdown still work as usual for a one-off adjustment to an already-running boost, without changing the configured default.
 
+## Ventilation Boost Card
+
+A custom Lovelace card (`ventilation-boost-card`) is bundled with the integration and registers itself automatically on startup - no manual "Resources" step needed. Add it to a dashboard as:
+
+```yaml
+type: custom:ventilation-boost-card
+entity: fan.keuken_living_boost              # required
+airflow_sensor: sensor.living_airflow_ventilation_rate
+aq_sensor: sensor.living_co2_concentration    # or a VOC sensor; omit for humidity-only rooms
+humidity_sensor: sensor.living_humidity
+name: Living                                  # optional override
+default_preset: "30 min"                      # optional
+default_level: 75                             # optional, 10-100
+default_level_entity: number.living_default_boost_level        # optional
+default_duration_entity: select.living_default_boost_duration  # optional
+```
+
+Shows live CO2/VOC/humidity severity, a boost level stepper and duration chips, and a start/stop button. When `default_level_entity`/`default_duration_entity` are set, the stepper/chips mirror those config entities live while the boost is off, instead of a fixed `default_level`/`default_preset`.
+
 ## Services
 ### Start Room Boost
 | parameter       | type        | required | description                                     |
@@ -146,6 +165,7 @@ Everything below was added on top of the original [rmassch/healthbox-hacs][healt
 - **Re-authenticate flow** - if a stored API key stops working, Home Assistant prompts for a fresh one instead of failing silently.
 - **Diagnostics download** - redacted config-entry diagnostics for bug reports (host/API key/serial numbers stripped).
 - **Bundled brand icon** - proper Renson branding in the UI via Home Assistant's Brands Proxy API, no separate PR to the `home-assistant/brands` repo needed.
+- **Bundled Lovelace card** - a custom `ventilation-boost-card` ships with the integration and registers itself as a dashboard resource automatically, no manual "Resources" setup.
 - **Sensor polish** - rounded precision on numeric sensors, `Boost Remaining` split into a raw-seconds sensor and a human-formatted one (e.g. `1h 2m 3s`).
 - **Security** - minimum supported Home Assistant version raised to `2026.6.0` (v0.7.0), fixing 4 known CVEs (1 critical) that affected the pinned test/dev dependency older releases relied on.
 
