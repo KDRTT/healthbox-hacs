@@ -13,8 +13,12 @@ _Integration to integrate with [healthbox][healthbox]._
 
 [![Renson][rensonimg]][resonurl]
 
+## About this repository
+
+This is an actively maintained continuation of [rmassch/healthbox-hacs][healthbox] (MIT licensed) - a separate repository sharing that project's history, not a GitHub-linked fork (it won't show up under rmassch's "Forks"). Install via HACS as a custom repository pointing at **this repo's URL**, not upstream's. See [What's New](#whats-new-in-this-repository) below for everything added on top of the original project.
+
 ## DISCLAIMER
-This is still a work in progress. If time permits, I'll try to push this to HACS or Home Assistant Core.
+This is still a work in progress.
 
 ## Changing the Host IP
 
@@ -33,6 +37,8 @@ Each config entry supports **Download Diagnostics** (Settings → Devices & Serv
 
 ## Installation
 
+**Requires Home Assistant 2026.6.0 or newer** (raised from 2024.11.3 as of v0.7.0, to resolve security advisories affecting older HA Core releases - see [What's New](#whats-new-in-this-repository)).
+
 ### HACS
 
 <!-- #### If published
@@ -50,7 +56,7 @@ Each config entry supports **Download Diagnostics** (Settings → Devices & Serv
 1. Navigate to the Integrations section
 1. Click the three dots at the top right
 1. Custom Repositories
-1. Enter the Repository URL: https://github.com/rmassch/healthbox-hacs
+1. Enter the Repository URL: https://github.com/KDRTT/healthbox-hacs
 1. Select Category -> Integration
 1. Click Add
 1. Close the modal
@@ -128,6 +134,20 @@ Each room with boost support gets a **Fan** entity (`Boost`), plus a **Boost All
 | --------- | -------------- | -------- | ----------------------------------------------- |
 | device_id      | str      | yes      | The Healthbox 3 Room Device               |
 
+## What's New in This Repository
+
+Everything below was added on top of the original [rmassch/healthbox-hacs][healthbox] project. Full details for each release are on the [Releases page][releases].
+
+- **Boost as Fan entities** - per-room `Boost` fan plus a `Boost All Rooms` fan, instead of only a service call.
+- **Configurable boost defaults** - `Default Boost Level` (Number) and `Default Boost Duration` (Select) per room (and one pair for "all rooms"), so a plain toggle tap starts boost the way you actually want it, no slider/preset dialing needed.
+- **Stop Boost button** - a one-tap, automation-friendly way to stop a room's boost.
+- **Ventilation Profile select** - change a room's Eco/Health/Intense profile directly from the dashboard.
+- **Automatic IP relocation** - the integration recognizes your Healthbox by serial number and updates its stored IP on its own when the device's DHCP lease changes, with a manual **Reconfigure** flow as an immediate fallback.
+- **Re-authenticate flow** - if a stored API key stops working, Home Assistant prompts for a fresh one instead of failing silently.
+- **Diagnostics download** - redacted config-entry diagnostics for bug reports (host/API key/serial numbers stripped).
+- **Bundled brand icon** - proper Renson branding in the UI via Home Assistant's Brands Proxy API, no separate PR to the `home-assistant/brands` repo needed.
+- **Sensor polish** - rounded precision on numeric sensors, `Boost Remaining` split into a raw-seconds sensor and a human-formatted one (e.g. `1h 2m 3s`).
+- **Security** - minimum supported Home Assistant version raised to `2026.6.0` (v0.7.0), fixing 4 known CVEs (1 critical) that affected the pinned test/dev dependency older releases relied on.
 
 <!-- ## Contributions are welcome!
 
@@ -138,15 +158,15 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [healthbox]: https://github.com/rmassch/healthbox-hacs
 [buymecoffee]: https://www.buymeacoffee.com/ludeeus
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/rmassch/healthbox-hacs.svg?style=for-the-badge
-[commits]: https://github.com/rmassch/healthbox-hacs/commits/main
+[commits-shield]: https://img.shields.io/github/commit-activity/y/KDRTT/healthbox-hacs.svg?style=for-the-badge
+[commits]: https://github.com/KDRTT/healthbox-hacs/commits/main
 [hacs]: https://github.com/hacs/integration
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [rensonimg]: https://www.renson.eu/Renson/media/Renson-images/renson-logo.png?ext=.png
 [resonurl]: https://www.renson.eu/gd-gb/producten-zoeken/ventilatie/mechanische-ventilatie/units/healthbox-3-0
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/rmassch/healthbox-hacs.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/badge/maintainer-@rmassch-blue.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/rmassch/healthbox-hacs.svg?style=for-the-badge
-[releases]: https://github.com/rmassch/healthbox-hacs/releases
+[license-shield]: https://img.shields.io/github/license/KDRTT/healthbox-hacs.svg?style=for-the-badge
+[maintenance-shield]: https://img.shields.io/badge/maintainer-@KDRTT-blue.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/release/KDRTT/healthbox-hacs.svg?style=for-the-badge
+[releases]: https://github.com/KDRTT/healthbox-hacs/releases
