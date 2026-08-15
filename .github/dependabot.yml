@@ -11,5 +11,9 @@ updates:
     schedule:
       interval: "weekly"
     ignore:
-      # Dependabot should not update Home Assistant as that should match the homeassistant key in hacs.json
+      # Dependabot should not routinely bump Home Assistant, since that should match the
+      # homeassistant key in hacs.json - but security-fix PRs still get through (this pin
+      # is dev/test tooling, not something that reaches users' installed integration), so
+      # this is scoped to version-updates only rather than blocking Dependabot entirely.
       - dependency-name: "homeassistant"
+        applies-to: "version-updates"
