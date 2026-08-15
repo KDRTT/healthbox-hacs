@@ -390,8 +390,7 @@ class HealthboxGlobalSensor(
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{
-            coordinator.config_entry.entry_id}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
         self._attr_name = description.name
         self._attr_device_info = healthbox_device_info(coordinator)
 
@@ -418,8 +417,7 @@ class HealthboxRoomSensor(
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{
-            coordinator.config_entry.entry_id}-{description.room.room_id}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.room.room_id}-{description.key}"
         self._attr_name = description.name
         self._attr_device_info = healthbox_room_device_info(
             coordinator, description.room
